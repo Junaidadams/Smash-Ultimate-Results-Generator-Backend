@@ -57,7 +57,7 @@ app.post("/api/event-data", async (req, res) => {
 
   try {
     // Step 1: Fetch event ID
-    console.log("Fetching event ID for slug:", slug);
+    // console.log("Fetching event ID for slug:", slug);
     const eventIdResponse = await axios.post(
       `https://api.start.gg/gql/alpha`,
       { query: eventIdQuery, variables: { slug } },
@@ -77,10 +77,9 @@ app.post("/api/event-data", async (req, res) => {
     }
 
     const eventId = eventData.id;
-    console.log("Fetched event ID:", eventId);
 
     // Step 2: Fetch standings
-    console.log("Fetching standings for event ID:", eventId);
+
     const standingsResponse = await axios.post(
       `https://api.start.gg/gql/alpha`,
       { query: standingsQuery, variables: { eventId, page, perPage } },
