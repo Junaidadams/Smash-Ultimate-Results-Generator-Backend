@@ -55,22 +55,6 @@ app.post("/api/event-data", async (req, res) => {
     }
   `;
 
-  const characterQuery = `
-    query GetCharacter($participantId: ID!) {
-      participant(id: $participantId) {
-        id
-        characters {
-          id
-          name
-          images {
-            icon
-            displayImage
-          }
-        }
-      }
-    }
-  `;
-
   try {
     // Step 1: Fetch event ID
     console.log("Fetching event ID for slug:", slug);
@@ -110,89 +94,18 @@ app.post("/api/event-data", async (req, res) => {
 
     const standingsData = standingsResponse.data.data.event.standings.nodes;
 
-    // Step 3: Fetch character data for each participant
-    const characterRequests = standingsData.flatMap((stand) => {
-      if (!stand.entrant || !stand.entrant.participants) {
-        return [];
-      }
+    // Step 3: Return standings without character data
+    const enhancedStandings = standingsData.map((stand) => ({
+      ...stand,
+      entrant: {
+        ...stand.entrant,
+        participants: stand.entrant.participants.map((participant) => ({
+          ...participant,
+        })),
+      },
+    }));
 
-      return stand.entrant.participants.map(async (participant) => {
-        const participantId = participant.id;
-
-        try {
-          console.log(
-            "Fetching character data for participant ID:",
-            participantId
-          );
-          const characterResponse = await axios.post(
-            `https://api.start.gg/gql/alpha`,
-            { query: characterQuery, variables: { participantId } },
-            {
-              headers: {
-                Authorization: `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          console.log(
-            `Character response for participant ${participantId}:`,
-            characterResponse.data
-          );
-
-          const characters =
-            characterResponse.data.data.participant.characters || [];
-          return {
-            participantId,
-            characters:
-              characters.length > 0
-                ? characters
-                : [{ id: 0, name: "", images: { icon: "", displayImage: "" } }],
-          };
-        } catch (error) {
-          console.error(
-            `Error fetching character data for participant ${participantId}:`,
-            error
-          );
-          return {
-            participantId,
-            characters: [
-              { id: 0, name: "", images: { icon: "", displayImage: "" } },
-            ],
-          };
-        }
-      });
-    });
-
-    const characterDataArray = await Promise.all(characterRequests);
-
-    // Map character data back to standings
-    const enhancedStandings = standingsData.map((stand) => {
-      const updatedParticipants = stand.entrant.participants.map(
-        (participant) => {
-          const characterData = characterDataArray.find(
-            (data) => data && data.participantId === participant.id
-          );
-
-          return {
-            ...participant,
-            characters: characterData
-              ? characterData.characters
-              : [{ id: 0, name: "", images: { icon: "", displayImage: "" } }],
-          };
-        }
-      );
-
-      return {
-        ...stand,
-        entrant: {
-          ...stand.entrant,
-          participants: updatedParticipants,
-        },
-      };
-    });
-
-    // Step 4: Send the combined data
+    // Step 4: Send the data
     res.json({
       event: {
         ...eventData,
