@@ -207,45 +207,6 @@ app.post("/api/event-data", async (req, res) => {
   }
 });
 
-// app.post("/api/entrant-characters", async (req, res) => {
-//   const { entrantId } = req.body;
-//   const apiKey = process.env.START_GG_API_KEY;
-
-//   const characterQuery = `
-//     query GetCharacter($entrantId: ID!) {
-//       entrant(id: $entrantId) {
-//         id
-//         character {
-//           id
-//           name
-//           images {
-//             icons
-//             displayImages
-//           }
-//         }
-//       }
-//     }
-//   `;
-
-//   try {
-//     const response = await axios.post(
-//       `https://api.start.gg/gql/alpha`,
-//       { query: characterQuery, variables: { entrantId } },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${apiKey}`,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-
-//     res.json(response.data);
-//   } catch (error) {
-//     console.error("Error fetching character data:", error);
-//     res.status(500).json({ error: "Error fetching character data" });
-//   }
-// });
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
